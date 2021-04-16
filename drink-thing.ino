@@ -4,6 +4,8 @@ HX711 scale;
 
 const int buttonPin = 5;  
 const int pumpPin = 12;
+const int loadcellDout = 3; 
+const int loadcellSck = 2;
 
 float calibrationFactor = 461;  //load cell calibration factor
 
@@ -18,6 +20,7 @@ int hasMeasured = 0;
 float currWeight = 0;
 float minWeight = 0;
 float maxWeight = 0;
+float units;
 
 void setup()
 {
@@ -26,7 +29,7 @@ void setup()
   
   Serial.begin(9600);        // initialize serial communication
 
-  scale.begin(3, 2);
+  scale.begin(loadcellDout, loadcellSck);
 
   scale.set_scale();
   scale.tare();  //Reset the scale to 0
@@ -37,6 +40,10 @@ void setup()
 void loop()
 {
   scale.set_scale(calibrationFactor);
+
+  units = scale.get_units(), 10;
+  Serial.print(units);
+  Serial.println(" grams"); 
   
   buttonState = digitalRead(buttonPin); // read the button input
 
@@ -51,11 +58,11 @@ void loop()
     {
       if(currWeight >= maxWeight)
       {
-        digitalWrite(12, LOW);
+        digitalWrite(pumpPin, LOW);
         pumpState = 0;
         break;
       }
-        digitalWrite(12, HIGH);
+        digitalWrite(pumpPin, HIGH);
         pumpState = 1;
     }
   }
@@ -72,11 +79,13 @@ void updateButton()
       
       if(pumpState==1 && hasMeasured == 1)
       {
-         digitalWrite(12, LOW);
+         digitalWrite(pumpPin, LOW);
          pumpState = 0;
          setMinMax(maxWeight);
-         if(maxWeight > 0) {maxWeight += 5;}
+         if(maxWeight > 0) {maxWeight += 10;}
          hasMeasured = 2;
+         Serial.print(maxWeight);
+         Serial.println(" max");
       }
   }
   else if(buttonState == LOW)
@@ -88,12 +97,14 @@ void updateButton()
       {
         if(pumpState == 0 && hasMeasured == 0)
         {
-            digitalWrite(12, HIGH);
+            digitalWrite(pumpPin, HIGH);
             pumpState = 1;
             setMinMax(minWeight);
-            minWeight -= 5;
+            minWeight -= 10;
             if(minWeight < 0) {minWeight = 0;}
             hasMeasured = 1;
+            Serial.print(minWeight);
+            Serial.println(" min");
         }
       }
       
@@ -101,7 +112,7 @@ void updateButton()
       {
           minWeight = 0;
           maxWeight = 0;
-          digitalWrite(12, LOW);
+          digitalWrite(pumpPin, LOW);
           pumpState = 0;
           hasMeasured = 0;
       }
