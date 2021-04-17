@@ -93,7 +93,7 @@ void updateButton()
          digitalWrite(pumpPin, LOW);
          pumpState = 0;
          maxWeight = scale.get_units();
-         if(maxWeight > 0) {maxWeight += 10;}
+         if(maxWeight > 0) {maxWeight += 5;}
          hasMeasured = 2;
          Serial.print(maxWeight);
          Serial.println(" max");
