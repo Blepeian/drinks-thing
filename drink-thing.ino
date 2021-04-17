@@ -18,9 +18,8 @@ int pumpState = 0;     // pump state (on/off)
 int hasMeasured = 0;
 
 float currWeight = 0;
-float minWeight = 0;
-float maxWeight = 0;
-float units;
+float minWeight;
+float maxWeight;
 
 void setup()
 {
@@ -34,16 +33,16 @@ void setup()
   scale.set_scale();
   scale.tare();  //Reset the scale to 0
 
-  long zeroFactor = scale.read_average(); //Get a baseline reading
+//  long zeroFactor = scale.read_average(); //Get a baseline reading
+//  Serial.print("Baseline reading: ");
+//  Serial.print(zeroFactor);
+//  Serial.print(" grams");
+//  Serial.println();
 }
 
 void loop()
 {
   scale.set_scale(calibrationFactor);
-
-  units = scale.get_units(), 10;
-  Serial.print(units);
-  Serial.println(" grams"); 
   
   buttonState = digitalRead(buttonPin); // read the button input
 
@@ -51,23 +50,35 @@ void loop()
   { 
      updateButton(); // button state changed. See function for more info
   }
-  else
-  {
-    getWeight(currWeight);
-    while(currWeight >= minWeight && currWeight != 0 && hasMeasured == 2)
-    {
-      if(currWeight >= maxWeight)
-      {
-        digitalWrite(pumpPin, LOW);
-        pumpState = 0;
-        break;
-      }
-        digitalWrite(pumpPin, HIGH);
-        pumpState = 1;
-    }
-  }
 
   lastButtonState = buttonState;        // save state for next loop
+  
+  if(hasMeasured == 2)
+  {
+      currWeight = scale.get_units();
+      if(currWeight < 0)
+      {
+        currWeight = 0;
+      }
+      Serial.print(currWeight);
+      Serial.println(" grams");
+
+     if(currWeight >= maxWeight)
+     {
+       digitalWrite(pumpPin, LOW);
+       pumpState = 0;
+     }
+     else if(currWeight < minWeight)
+     {
+       digitalWrite(pumpPin, LOW);
+       pumpState = 0;
+     }
+     else if(currWeight >= minWeight && currWeight > 0 && currWeight < maxWeight)
+     {
+         digitalWrite(pumpPin, HIGH);
+         pumpState = 1;
+     }
+  }
 }
 
 void updateButton()
@@ -77,11 +88,11 @@ void updateButton()
   {
       startPressed = millis();
       
-      if(pumpState==1 && hasMeasured == 1)
+      if(pumpState == 1 && hasMeasured == 1)
       {
          digitalWrite(pumpPin, LOW);
          pumpState = 0;
-         setMinMax(maxWeight);
+         maxWeight = scale.get_units();
          if(maxWeight > 0) {maxWeight += 10;}
          hasMeasured = 2;
          Serial.print(maxWeight);
@@ -99,7 +110,7 @@ void updateButton()
         {
             digitalWrite(pumpPin, HIGH);
             pumpState = 1;
-            setMinMax(minWeight);
+            minWeight = scale.get_units();
             minWeight -= 10;
             if(minWeight < 0) {minWeight = 0;}
             hasMeasured = 1;
@@ -108,7 +119,7 @@ void updateButton()
         }
       }
       
-      if (holdTime > 3000)
+      if (holdTime >= 3000)
       {
           minWeight = 0;
           maxWeight = 0;
@@ -116,67 +127,5 @@ void updateButton()
           pumpState = 0;
           hasMeasured = 0;
       }
-
   }
-}
-
-float getWeight(float weight)
-{
-  weight = scale.get_units(), 10;
-  if (weight < 0)
-  {
-    weight = 0.00;
-  }
-  
-  return weight;
-}
-
-float setMinMax(float weight)
-{
-  float temp[10];
-  float units;
-  
-  if(pumpState == 1)
-  {
-    for(int i = 0; i < 10; i++)
-    {
-      getWeight(units);
-      temp[i] = units;
-
-      if(i > 0)
-      {
-        if(weight > temp[i])
-        {
-          weight = temp[i];
-        }
-      }
-      else
-      {
-        weight = temp[0];
-      }
-    }
-  }
-
-  if(pumpState == 0)
-  {
-    for(int i = 0; i < 10; i++)
-    {
-      getWeight(units);
-      temp[i] = units;
-
-      if(i > 0)
-      {
-        if(weight < temp[i])
-        {
-          weight = temp[i];
-        }
-      }
-      else
-      {
-        weight = temp[0];
-      }
-    }
-  }
-
-  return weight;
 }
