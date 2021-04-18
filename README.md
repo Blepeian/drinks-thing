@@ -12,7 +12,7 @@
 * HX711 - библиотека за употреба на усилвател на сигнали за електронни везни - https://github.com/bogde/HX711
 
 ## Използвана музика:
-* <a href="https://icons8.com/music/author/spaceinvader">Spaceinvader</a> - Activation
+* Nihilore - Motion Blur - http://www.nihilore.com/synthwave
 
 ## Автори:
 * Михаил Димитров -  повече хардуерист, малко програмист - https://github.com/bladedbicycle384
