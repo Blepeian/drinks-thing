@@ -32,12 +32,6 @@ void setup()
 
   scale.set_scale();
   scale.tare();  //Reset the scale to 0
-
-//  long zeroFactor = scale.read_average(); //Get a baseline reading
-//  Serial.print("Baseline reading: ");
-//  Serial.print(zeroFactor);
-//  Serial.print(" grams");
-//  Serial.println();
 }
 
 void loop()
@@ -93,7 +87,7 @@ void updateButton()
          digitalWrite(pumpPin, LOW);
          pumpState = 0;
          maxWeight = scale.get_units();
-         if(maxWeight > 0) {maxWeight += 5;}
+         if(maxWeight > 0) {maxWeight -= 2;}
          hasMeasured = 2;
          Serial.print(maxWeight);
          Serial.println(" max");
@@ -111,7 +105,7 @@ void updateButton()
             digitalWrite(pumpPin, HIGH);
             pumpState = 1;
             minWeight = scale.get_units();
-            minWeight -= 10;
+            minWeight -= 25;
             if(minWeight < 0) {minWeight = 0;}
             hasMeasured = 1;
             Serial.print(minWeight);
